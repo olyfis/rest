@@ -1,13 +1,15 @@
-package com.olympus.rest;
-// Run: http://localhost:8181/rest/ssbooking?id=101-0008810-028
-//Run: http://localhost:8181/rest/ssbooking?appid=17168
+package com.olympus.rest.ssbooking;
+
+ 
+//Run: http://localhost:8181/rest/ssbook?id=101-0008810-028
 
 
+//Run: http://localhost:8181/rest/ssbook?appid=17168
 
-	import java.io.BufferedWriter;
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-	import java.io.PrintWriter;
+import java.io.PrintWriter;
 import java.security.KeyStore.Entry;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -15,30 +17,34 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DecimalFormat;
-	import java.text.SimpleDateFormat;
-	import java.util.ArrayList;
-	import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Handler;
-	import java.util.logging.Logger;
-	import com.google.gson.JsonArray;
-	import com.google.gson.JsonObject;
+import java.util.logging.Logger;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
-	import javax.servlet.ServletException;
-	import javax.servlet.annotation.WebServlet;
-	import javax.servlet.http.HttpServlet;
-	import javax.servlet.http.HttpServletRequest;
-	import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import com.olympus.rest.*;
 
-
-	import com.olympus.olyutil.Olyutil;
-	import com.olympus.olyutil.log.OlyLog;
+import com.olympus.olyutil.Olyutil;
+import com.olympus.olyutil.log.OlyLog;
 	 
-	@WebServlet("/ssbooking")
-	public class SalesSupportBooking extends HttpServlet {
-		private final Logger logger = Logger.getLogger(SalesSupportBooking.class.getName()); // define logger
+	@WebServlet("/ssbook")
+	public class SSbooking extends HttpServlet {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		private final Logger logger = Logger.getLogger(SSbooking.class.getName()); // define logger
 		static String propFile = "C:\\Java_Dev\\props\\Rapport.prop";	
 		
 		static String hdrFile = "C:\\Java_Dev\\props\\headers\\Qlik_SalesSupport_HDR_V2.txt";
@@ -270,28 +276,28 @@ import java.util.logging.Handler;
 			int key = 0;
 			for (String str : strArr) { // iterating ArrayList
 				SapObj sapObj = new SapObj();
- 				//System.out.println("**** Str=" + str);
- 				String[] items = str.split(";");
- 				int sz = items.length;
- 				for (int i = 0; i < sz; i++) {
- 				//for (int i = 0; i <= size; i++) {
- 					/*
- 					if (k >= 0 && k < 147) {
- 						System.out.println("****!!!*** Row="  + k + "--  i=" + i + "-- " + hdrArr.get(i)  + "=" + items[i] + "-- SZ=" + sz);
+				//System.out.println("**** Str=" + str);
+				String[] items = str.split(";");
+				int sz = items.length;
+				for (int i = 0; i < sz; i++) {
+				//for (int i = 0; i <= size; i++) {
+					/*
+					if (k >= 0 && k < 147) {
+						System.out.println("****!!!*** Row="  + k + "--  i=" + i + "-- " + hdrArr.get(i)  + "=" + items[i] + "-- SZ=" + sz);
 
- 					}
- 					 
- 						//System.out.println(k + ";" + i + ";" + hdrArr.get(i)  + ";" + items[i] );
- 					 */
+					}
+					 
+						//System.out.println(k + ";" + i + ";" + hdrArr.get(i)  + ";" + items[i] );
+					 */
 				}
- 					//System.out.println("*** Insert:" + items[0] + "-- EC=" + items[3] + "--");
- 					key = Olyutil.strToInt(items[0]);
- 					sapObj.setCreditApp(key);
- 					sapObj.setNumAssets(Olyutil.strToInt(items[1]));
- 					sapObj.setNumQuotes(Olyutil.strToInt(items[2]));
- 					sapObj.setEquipCost(Olyutil.strToDouble(items[3]));
- 					map.put(key, sapObj);
- 				
+					//System.out.println("*** Insert:" + items[0] + "-- EC=" + items[3] + "--");
+					key = Olyutil.strToInt(items[0]);
+					sapObj.setCreditApp(key);
+					sapObj.setNumAssets(Olyutil.strToInt(items[1]));
+					sapObj.setNumQuotes(Olyutil.strToInt(items[2]));
+					sapObj.setEquipCost(Olyutil.strToDouble(items[3]));
+					map.put(key, sapObj);
+				
 				k++;
 			}
 			
@@ -392,7 +398,10 @@ import java.util.logging.Handler;
 
 		JsonArray jsonArr = new JsonArray();
 		HashMap<Integer, SapObj> rtnMap = new HashMap<Integer, SapObj>();
-
+		boolean arg = false;
+		String idParam = "";
+		String sqlParamFile = "";
+		
 		PrintWriter out = response.getWriter();
 		String dispatchJSP = null;
 
@@ -420,20 +429,29 @@ import java.util.logging.Handler;
 		String idValue = "";
 		
 		if (request.getParameterMap().containsKey("id")) {
-			String idParam = "id";
+			arg = true;
+			idParam = "id";
 			idValue = request.getParameter(idParam);
-			System.out.println("%%%%%% IDVal=" + idValue + "--");;
-            
-            
-        } else if (request.getParameterMap().containsKey("appid")) {
-        	String idParam = "appid";
-    		idValue = request.getParameter(idParam);
-    		System.out.println("%%%%%% AppIDVal=" + idValue + "--");
-        	
-        } else {
-        	System.out.println("%%%%%% IDVal=" + idValue + "--");
-        	System.out.println("%%%%%% key not found");
-        }
+			sqlParamFile = "C:\\Java_Dev\\props\\sql\\qlikrest\\QlikSalesSupport_V4_contract.sql";
+			
+			//System.out.println("%%%%%% IDVal=" + idValue + "--");;
+         
+         
+		} else if (request.getParameterMap().containsKey("appid")) {
+			arg = true;
+			idParam = "appid";
+			idValue = request.getParameter(idParam);
+			sqlParamFile = "C:\\Java_Dev\\props\\sql\\qlikrest\\QlikSalesSupport_V4_appid.sql";
+
+			//System.out.println("%%%%%% AppIDVal=" + idValue + "--");
+     	
+		} else {
+			sqlParamFile = "C:\\Java_Dev\\props\\sql\\qlikrest\\QlikSalesSupport_V4.sql";
+			arg = false;
+			idParam = "";
+			//System.out.println("%%%%%% IDVal=" + idValue + "--");
+			//System.out.println("%%%%%% key not found");
+		}
 		
 		
 		
@@ -452,7 +470,9 @@ import java.util.logging.Handler;
 		String dateStamp = date.toString();
 
 		// Olyutil.displayJsonArray(jsonArr);
-		strArr = DButil.getDbData(propFile, sqlFile, sep);
+		 
+		
+		strArr = DButilParam.getDbData(propFile, sqlParamFile, sep, arg, idValue);
 		strArr2 = DButil.getDbData2(sqlFile2, "", "Asset", propFile, "" ); // SAP data
 		//Olyutil.printStrArray(strArr);
 		//writeToFile(strArr, outputFileName1, sep);

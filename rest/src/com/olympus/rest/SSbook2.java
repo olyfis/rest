@@ -34,7 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.olympus.olyutil.Olyutil;
 import com.olympus.olyutil.log.OlyLog;
  
-@WebServlet("/ssbook")
+@WebServlet("/ssbook3")
 public class SSbook2 extends HttpServlet {
 	private final Logger logger = Logger.getLogger(SalesSupportBooking.class.getName()); // define logger
 	static String propFile = "C:\\Java_Dev\\props\\Rapport.prop";	

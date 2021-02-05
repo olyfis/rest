@@ -7,7 +7,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
@@ -29,7 +32,7 @@ public class ThirdPartyShipments extends HttpServlet {
 	private static String dbName = "Commencement.accdb";
 	//private static String dbPath = "//C://Java_Dev//props//accessDB//";
 	private static String dbPath = "//C:\\Java_Dev\\props\\accessDB\\"+ "";
-	 
+	private static String idFile = "//C:\\Java_Dev\\props\\accessDB\\"+ "id.csv";
 	private static String dbPathName = dbPath + dbName;
 	
 	/****************************************************************************************************************************************************/
@@ -72,7 +75,7 @@ public class ThirdPartyShipments extends HttpServlet {
 		
 	}
 /*****************************************************************************************************************************************************/
-	public static HashMap<String, Double> getAccessDbData() throws ClassNotFoundException {
+	public static HashMap<String, Double> getAccessDbData(HashMap<String, String> idMap) throws ClassNotFoundException {
 		HashMap<String, Double> map = new HashMap<String, Double>();
 		JsonArray jsonArr = new JsonArray();
 		double amount = 0.00;
@@ -93,7 +96,9 @@ public class ThirdPartyShipments extends HttpServlet {
 
 			Statement statement = connection.createStatement();
 			ResultSet result = statement.executeQuery(sqlQuery);
-
+			 
+			
+			
 			while (result.next()) {
 				JsonObject obj = new JsonObject();
 
@@ -138,7 +143,9 @@ public class ThirdPartyShipments extends HttpServlet {
 						//System.out.println("**poError: Less than 15 chars.");
 						continue;
 						  
-					}				
+					}	
+				 
+					  
 				} else { // poNumber == 15 chars
 					//System.out.println("**!!!!!!!!!!!!!!!!!!!!!!!!!!! poNumber=" + poNumber + "--");
 					poNumber = poNumber.replaceAll("\\s", "-");
@@ -151,6 +158,8 @@ public class ThirdPartyShipments extends HttpServlet {
 				
 				//System.out.println("**!!!!!!!!!!!!!!!!!!!!!!!!!!!! NewPO=" + newPO + "--              PO=" + poNumber + "--");
 				poNumber = newPO;
+				
+				
 				//System.out.println("***** PO_NUMBER=" + poNumber + "--");
 				double value = result.getFloat("Amount");
 				//System.out.println("*****VALUE=" + value + "--");
@@ -166,7 +175,9 @@ public class ThirdPartyShipments extends HttpServlet {
 			 
 				
 				//System.out.println("PO=" + poNumber + ", Amount:" + amount);
-				
+				if (idMap.containsKey(poNumber)) {
+					System.out.println("**!!!!!!!!!!!!!! Found PO:" + poNumber + "--");	
+				}
 				
 				if (map.containsKey(poNumber)) {
 					double newAmount = 0.00;
@@ -226,7 +237,23 @@ public class ThirdPartyShipments extends HttpServlet {
 	
 	/****************************************************************************************************************************************************/
 
-	
+	public HashMap<String, String>  parseArrData(ArrayList<String> strArr) throws IOException  {
+		 
+		HashMap<String, String> idMap = new HashMap<String, String>();
+		for (String str : strArr) { // iterating ArrayList
+			 
+			//System.out.println("**** Str=" + str);
+		 
+			String[] items = str.split(",");
+			 
+			idMap.put(items[1], items[0]);
+			
+			
+			
+		}
+		
+		return(idMap);
+	}
 	
 	
 
@@ -237,8 +264,18 @@ public class ThirdPartyShipments extends HttpServlet {
 		JsonArray jArr = new JsonArray();
 		PrintWriter out = response.getWriter();
 		HashMap<String, Double> TotalsMap = new HashMap<String, Double>();
+		ArrayList<String> dataArr = new ArrayList<String>();
+		ArrayList<String> idArr = new ArrayList<String>();
+		HashMap<String, String> idMapRtn = new HashMap<String, String>();
+		dataArr = Olyutil.readInputFile(idFile);
+		
+		idMapRtn = parseArrData(dataArr);
+		
+		//Olyutil.printStrArray(idArr);
+		
+		
 		try {
-			TotalsMap = getAccessDbData();
+			TotalsMap = getAccessDbData(idMapRtn);
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -246,6 +283,8 @@ public class ThirdPartyShipments extends HttpServlet {
 		jArr = HashMapToJSON(TotalsMap);
 		//displayHashMap(TotalsMap);
 		Olyutil.jsonWriterResponse(jArr, out);
+		
+		
 		
 	}
 }
